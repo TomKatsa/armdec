@@ -30,7 +30,7 @@ void DataProcImmediateShift(Bits& instruction) {
     std::string cond = GetCondition(instruction);
     int opcode = instruction.Range(21,25);
     cout << opcodes[opcode] << cond << " R" << regs.Rd << ", R";
-    if (opcode == opcodes_enum::MOV) {
+    if (opcode == opcodes_enum::MOV) { // MOV takes only the second source operand
         cout << regs.Rm;
     }
     else {
