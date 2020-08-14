@@ -39,7 +39,7 @@ std::string opcodes[] = {"AND",
                          "MVN"
 };
 
-typedef enum _opcodes_enum {AND,
+enum opcodes_enum {AND,
                     EOR,
                     SUB,
                     RSB,
@@ -55,14 +55,14 @@ typedef enum _opcodes_enum {AND,
                     MOV,
                     BIC,
                     MVN
-} opcodes_enum;
+};
 
 
-typedef struct _registers {
+struct Registers {
     int Rd; // Destination
     int Rn; // Source 1
     int Rm; // Source 2
     int Rs; // Register shift
-} Registers;
+};
 
 #endif

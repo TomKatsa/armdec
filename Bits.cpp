@@ -3,9 +3,8 @@
 #include "Bits.hpp"
 
 
-Bits::Bits(uint32_t num) {
+Bits::Bits(uint32_t num) : size(32) {
     this->internal_num = num;
-    this->size = 32;
 }
 
 unsigned char Bits::operator[](int index) {
