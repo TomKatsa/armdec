@@ -2,6 +2,9 @@
 #define ARMDEC_H_
 #include <iostream>
 
+#define ARM_MODE 4
+#define THUMB_MODE 2
+
 // Array index is opcode number for the condition
 std::string conditions[] = {"EQ",
                             "NE",
