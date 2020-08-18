@@ -42,6 +42,9 @@ std::string opcodes[] = {"AND",
                          "MVN"
 };
 
+
+std::string shiftype[] = {"LSL", "LSR", "ASL", "ASR"};
+
 enum opcodes_enum {AND,
                     EOR,
                     SUB,
