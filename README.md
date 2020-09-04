@@ -1,2 +1,2 @@
 # armdec
-ARM Instruction Decoder
+ARM Instruction Decoder [WIP]
