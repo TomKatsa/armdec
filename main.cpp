@@ -30,7 +30,10 @@ int main(int argc, char const *argv[])
     // ANDLS R5, R5, R5
     // SUBGE R7, R6, R5
     // MOV R1, R1, LSL #1
-    const char* section = "\x02\x10\xa0\xe1\x03\x10\x81\x00\x05\x50\x05\x90\x05\x70\x46\xa0\x81\x10\xa0\xe1";
-    DecodeSection(section, 20);
+    // MOV R1, R2, LSL R3
+    // MOV R2, #1024
+    // ADD R3, R4, #31
+    const char* section = "\x02\x10\xa0\xe1\x03\x10\x81\x00\x05\x50\x05\x90\x05\x70\x46\xa0\x81\x10\xa0\xe1\x12\x13\xa0\xe1\x01\x2b\xa0\xe3\x1f\x30\x84\xe2";
+    DecodeSection(section, 32);
     return 0;
 }

@@ -28,6 +28,7 @@ class Instruction {
     void DataProcImmediateShift();
     void DataProcRegisterShift();
     void DecodeInstruction();
+    void DataProcImmediate();
 };
 
 #endif

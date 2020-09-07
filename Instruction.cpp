@@ -47,15 +47,50 @@ void Instruction::DataProcImmediateShift() {
 }
 
 void Instruction::DataProcRegisterShift() {
+    GetRegisters();
+    std::string cond = GetCondition();
+    int opcode = this->raw_instruction.Range(21,25);
+    std::string shiftype = GetShiftType();
+    this->output << opcodes[opcode] << cond << " R" << this->regstruct.Rd << ", R";
+    if (opcode == opcodes_enum::MOV) { // MOV takes only the second source operand
+        output << this->regstruct.Rm;
+    }
+    else {
+        output << this->regstruct.Rn << ", R" << this->regstruct.Rm;
+    }
+    output << ", " << shiftype << " R" << this->regstruct.Rs << std::endl;
     return;
 }
 
 
+void Instruction::DataProcImmediate() {
+    GetRegisters();
+    std::string cond = GetCondition();
+    int opcode = this->raw_instruction.Range(21,25);
+    int rotate_imm = this->raw_instruction.Range(8,12);
+    int immed_8 = this->raw_instruction.Range(0, 8);
+    // Rotate right in 32 bit space
+    int value = (immed_8 >> rotate_imm*2) | (immed_8 << (32-rotate_imm*2));
+    this->output << opcodes[opcode] << cond << " R";
+    if (opcode == opcodes_enum::MOV) { // MOV takes only the second source operand
+        output << this->regstruct.Rd;
+    }
+    else {
+        output << this->regstruct.Rn << ", R" << this->regstruct.Rd;
+    }
+    output << ", #" << value << std::endl;
+}
+
 void Instruction::DecodeInstruction() {
+    // xxxx000xxxxxxxxxxxxxxxxxxxx0xxxx
     if (this->raw_instruction.Range(25,28) == 0 && this->raw_instruction[4]==0) {
         DataProcImmediateShift();
     }
+    // xxxx000xxxxxxxxxxxxxxxxxxxx1xxxx
     if (this->raw_instruction.Range(25, 28) == 0 && this->raw_instruction[4]==1) {
         DataProcRegisterShift();
+    }
+    if (this->raw_instruction.Range(25,28) == 0b001) {
+        DataProcImmediate();
     }
 }
