@@ -8,7 +8,7 @@
 class Bits {
 
     private:
-    int size;
+    const int size;
     uint32_t internal_num;
 
 
