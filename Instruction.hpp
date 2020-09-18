@@ -17,18 +17,21 @@ class Instruction {
     private:
     Registers regstruct;
     Bits raw_instruction;
+    std::string condition;
 
     public:
     ostringstream output;
     Instruction(uint32_t);
-    void GetRegisters();
-    std::string GetCondition();
+    void SetRegisters();
+    void SetCondition();
     std::string GetShiftType();
     int GetShiftAmount();
+    int GetOpcodeNum();
     void DataProcImmediateShift();
     void DataProcRegisterShift();
     void DecodeInstruction();
     void DataProcImmediate();
+    void LoadStoreImmediateOffset();
 };
 
 #endif
