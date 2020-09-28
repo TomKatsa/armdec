@@ -60,7 +60,7 @@ enum opcodes_enum {AND,
                     ORR,
                     MOV,
                     BIC,
-                    MVN
+                    NV
 };
 
 

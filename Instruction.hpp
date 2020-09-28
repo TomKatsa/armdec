@@ -2,6 +2,7 @@
 #define _INSTRUCTION_H_
 #include <sstream>
 #include "Bits.hpp"
+#include "mnemonics.hpp"
 
 using std::ostringstream;
 
@@ -17,17 +18,24 @@ class Instruction {
     private:
     Registers regstruct;
     Bits raw_instruction;
+    std::string condition;
 
     public:
     ostringstream output;
     Instruction(uint32_t);
-    void GetRegisters();
-    std::string GetCondition();
+    void SetRegisters();
+    void SetCondition();
+    opcodes_enum GetConditionEnum();
     std::string GetShiftType();
     int GetShiftAmount();
+    int GetOpcodeNum();
     void DataProcImmediateShift();
     void DataProcRegisterShift();
     void DecodeInstruction();
+    void DataProcImmediate();
+    void LoadStoreImmediateOffset();
+    void BranchImmediate();
+    bool OnlyTwoOperands(int opcode_num);
 };
 
 #endif
