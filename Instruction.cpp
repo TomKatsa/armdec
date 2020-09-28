@@ -1,7 +1,7 @@
 #include "Instruction.hpp"
 #include "mnemonics.hpp"
 
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
 #define printdebug(...) printf(__VA_ARGS__)
 #else
@@ -9,7 +9,8 @@
 #endif
 
 using std::string;
-
+using std::hex;
+using std::dec;
 
 Instruction::Instruction(uint32_t raw) : raw_instruction(raw){
         SetRegisters();
@@ -118,9 +119,21 @@ void Instruction::LoadStoreImmediateOffset() {
 
 
 
-void Instruction::Branch() {
-    uint32_t offset = this->raw_instruction.Range(0, 24);
-    this->output << "B" << ((this->raw_instruction[24] == 1) ? "L" : "" );
+void Instruction::BranchImmediate() {
+    int32_t offset_24 = this->raw_instruction.Range(0, 24);
+    // Checking the 24th bit, to sign extend to 32 bit,
+    // shift left 2 bits and add 8 (PC in ARM holds the address of 2 next instructions)
+    if (this->raw_instruction[23] == 1)
+    {
+        offset_24 = ((offset_24 | 0xff000000) << 2) + 8;
+    }
+    else
+    {
+        offset_24 = (offset_24 << 2) + 8;
+    }
+    this->output << "B" << ((this->raw_instruction[24] == 1) ? "L " : " " );
+    this->output <<  "#"  << std::hex << offset_24 << std::dec;
+    this->output << "   ; " << offset_24 << std::endl;
 }
 
 
@@ -145,6 +158,6 @@ void Instruction::DecodeInstruction() {
     }
     if (this->raw_instruction.Range(25,28) == 0b101) {
         printdebug("!BRANCH\n");
-        Branch();
+        BranchImmediate();
     }
 }

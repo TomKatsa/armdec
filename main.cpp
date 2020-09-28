@@ -49,8 +49,7 @@ int main(int argc, char const *argv[])
                             "\x1f\x30\x84\xe2"
                             "\x0f\x00\x11\xe5"
                             "\xc8\x10\xc2\xe5"
-                            "\x1e\xff\x2f\xe1"; // BX broken
-                            //"\x46\x00\x00\xea";
+                            "\x46\xff\xff\xea";
     DecodeSection(section, 44);
     return 0;
 }

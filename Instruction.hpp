@@ -34,7 +34,7 @@ class Instruction {
     void DecodeInstruction();
     void DataProcImmediate();
     void LoadStoreImmediateOffset();
-    void Branch();
+    void BranchImmediate();
     bool OnlyTwoOperands(int opcode_num);
 };
 
