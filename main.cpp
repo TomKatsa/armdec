@@ -35,7 +35,7 @@ int main(int argc, char const *argv[])
     // ADD R3, R4, #31
     // LDR R1, [R0, #-15]
     // STRB R2, [R1, #200]
-    // B #0x120
+    // B #0xfffffd20
 
 
 
