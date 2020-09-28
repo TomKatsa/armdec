@@ -2,6 +2,7 @@
 #define _INSTRUCTION_H_
 #include <sstream>
 #include "Bits.hpp"
+#include "mnemonics.hpp"
 
 using std::ostringstream;
 
@@ -24,6 +25,7 @@ class Instruction {
     Instruction(uint32_t);
     void SetRegisters();
     void SetCondition();
+    opcodes_enum GetConditionEnum();
     std::string GetShiftType();
     int GetShiftAmount();
     int GetOpcodeNum();
@@ -32,6 +34,8 @@ class Instruction {
     void DecodeInstruction();
     void DataProcImmediate();
     void LoadStoreImmediateOffset();
+    void Branch();
+    bool OnlyTwoOperands(int opcode_num);
 };
 
 #endif

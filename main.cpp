@@ -35,6 +35,10 @@ int main(int argc, char const *argv[])
     // ADD R3, R4, #31
     // LDR R1, [R0, #-15]
     // STRB R2, [R1, #200]
+    // B #0x120
+
+
+
     const char* section = "\x02\x10\xa0\xe1"
                             "\x03\x10\x81\x00"
                             "\x05\x50\x05\x90"
@@ -44,7 +48,9 @@ int main(int argc, char const *argv[])
                             "\x01\x2b\xa0\xe3"
                             "\x1f\x30\x84\xe2"
                             "\x0f\x00\x11\xe5"
-                            "\xc8\x10\xc2\xe5";
-    DecodeSection(section, 40);
+                            "\xc8\x10\xc2\xe5"
+                            "\x1e\xff\x2f\xe1"; // BX broken
+                            //"\x46\x00\x00\xea";
+    DecodeSection(section, 44);
     return 0;
 }
