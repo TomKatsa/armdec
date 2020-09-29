@@ -7,10 +7,10 @@
 using std::ostringstream;
 
 struct Registers {
-    int Rd; // Destination
-    int Rn; // Source 1
-    int Rm; // Source 2
-    int Rs; // Register shift
+    std::string Rd; // Destination
+    std::string Rn; // Source 1
+    std::string Rm; // Source 2
+    std::string Rs; // Register shift
 };
 
 
@@ -35,6 +35,8 @@ class Instruction {
     void DataProcImmediate();
     void LoadStoreImmediateOffset();
     void BranchImmediate();
+    void BranchExchange();
+    void Unknown();
     bool OnlyTwoOperands(int opcode_num);
 };
 
