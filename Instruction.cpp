@@ -132,17 +132,25 @@ void Instruction::BranchImmediate() {
         offset_24 = (offset_24 << 2) + 8;
     }
     this->output << "B" << ((this->raw_instruction[24] == 1) ? "L " : " " );
+    this->output << this->condition << " ";
     this->output <<  "#0x"  << std::hex << offset_24 << std::dec;
     this->output << "   ; " << offset_24 << std::endl;
 }
 
 void Instruction::BranchExchange() {
     this->output << ((this->raw_instruction[5] == 1) ? "BLX " : "BX ");
+    this->output << this->condition << " ";
     this->output <<  this->regstruct.Rm << std::endl;
 }
 
 void Instruction::Unknown() {
     this->output << "(unknown)" << std::endl;
+}
+
+void Instruction::SoftwareInterrupt() {
+    this->output << "SWI" << this->condition;
+    this->output << " #" << this->raw_instruction.Range(0, 24) << std::endl;
+
 }
 
 void Instruction::DecodeInstruction() {
@@ -171,6 +179,14 @@ void Instruction::DecodeInstruction() {
     else if (this->raw_instruction.Range(25,28) == 0b101) {
         printdebug("!BRANCH\n");
         BranchImmediate();
+    }
+    else if (this->raw_instruction.Range(24, 28) == 0b1111) {
+        printdebug("!SWI\n");
+        SoftwareInterrupt();
+    }
+    else {
+        printdebug("!UNKNOWN\n");
+        Unknown();
     }
 
 }

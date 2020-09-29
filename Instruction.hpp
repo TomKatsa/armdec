@@ -36,6 +36,7 @@ class Instruction {
     void LoadStoreImmediateOffset();
     void BranchImmediate();
     void BranchExchange();
+    void SoftwareInterrupt();
     void Unknown();
     bool OnlyTwoOperands(int opcode_num);
 };
