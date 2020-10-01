@@ -1,5 +1,6 @@
 #include "Instruction.hpp"
 #include "mnemonics.hpp"
+#include <iomanip>
 
 //#define DEBUG
 #ifdef DEBUG
@@ -8,6 +9,10 @@
 #define printdebug(x)
 #endif
 
+#define PADDING 10
+
+
+
 using std::string;
 using std::hex;
 using std::dec;
@@ -15,13 +20,14 @@ using std::dec;
 Instruction::Instruction(uint32_t raw) : raw_instruction(raw){
         SetRegisters();
         SetCondition();
+        PadOutput(PADDING);
 }
 
 void Instruction::SetRegisters() {
-    this->regstruct.Rn = registers[this->raw_instruction.Range(16, 20)];
-    this->regstruct.Rd = registers[this->raw_instruction.Range(12,16)];
-    this->regstruct.Rm = registers[this->raw_instruction.Range(0,4)];
-    this->regstruct.Rs = registers[this->raw_instruction.Range(8,12)];
+    this->regstruct.Rn = registers[this->raw_instruction.Range(16, 20)]; // operand
+    this->regstruct.Rd = registers[this->raw_instruction.Range(12,16)]; // destination
+    this->regstruct.Rm = registers[this->raw_instruction.Range(0,4)]; // operand
+    this->regstruct.Rs = registers[this->raw_instruction.Range(8,12)]; // shift
 }
 
 // Check the condition bits
@@ -46,6 +52,10 @@ opcodes_enum Instruction::GetConditionEnum() {
     return (opcodes_enum)this->raw_instruction.Range(28,32);
 }
 
+void Instruction::PadOutput(int num) {
+    this->output << std::left << std::setw(num);
+}
+
 bool Instruction::OnlyTwoOperands(int opcode_num) {
     return (opcode_num == opcodes_enum::MOV 
             || opcode_num == opcodes_enum::TEQ 
@@ -55,36 +65,31 @@ bool Instruction::OnlyTwoOperands(int opcode_num) {
 }
 
 
-void Instruction::DataProcImmediateShift() {
+void Instruction::DataProcShift() {
     int opcode_num = this->GetOpcodeNum();
     string shiftype = GetShiftType();
-    int shift = GetShiftAmount();
-    this->output << opcodes[opcode_num] << this->condition << " " << this->regstruct.Rd << ", ";
+    this->output << (opcodes[opcode_num] + this->condition);
+    this->output << this->regstruct.Rd << ", ";
     if (OnlyTwoOperands(opcode_num)) {
         output << this->regstruct.Rm;
     }
     else {
         output << this->regstruct.Rn << ", " << this->regstruct.Rm;
-    } 
-    if (shift) {
+    }
+    if (this->raw_instruction[4] == 0) {
+        // Immediate value shift
+        int shift = GetShiftAmount();
+        if (shift) {
         output << ", " << shiftype << " #" << shift;
+        }
+    }
+    else {
+        // Register shift
+        output << ", " << shiftype << " " << this->regstruct.Rs;
     }
     output << std::endl;
 }
 
-void Instruction::DataProcRegisterShift() {
-    int opcode_num = this->GetOpcodeNum();
-    string shiftype = GetShiftType();
-    this->output << opcodes[opcode_num] << this->condition << " " << this->regstruct.Rd << ", ";
-    if (OnlyTwoOperands(opcode_num)) {
-        output << this->regstruct.Rm;
-    }
-    else {
-        output << this->regstruct.Rn << ", " << this->regstruct.Rm;
-    }
-    output << ", " << shiftype << " " << this->regstruct.Rs << std::endl;
-    return;
-}
 
 
 void Instruction::DataProcImmediate() {
@@ -94,12 +99,12 @@ void Instruction::DataProcImmediate() {
     // Rotate right in 32 bit space
     // value = immed_8 rotated right by 2*rotate
     int value = (immed_8 >> rotate_imm*2) | (immed_8 << (32-rotate_imm*2));
-    this->output << opcodes[opcode_num] << this->condition << " ";
+    this->output << (opcodes[opcode_num] + this->condition);
     if (OnlyTwoOperands(opcode_num)) {
         output << this->regstruct.Rd;
     }
     else {
-        output << this->regstruct.Rn << ", " << this->regstruct.Rd;
+        output << this->regstruct.Rd << ", " << this->regstruct.Rn;
     }
     output << ", #" << value << std::endl;
 }
@@ -108,10 +113,9 @@ void Instruction::DataProcImmediate() {
 void Instruction::LoadStoreImmediateOffset() {
     string operation = (this->raw_instruction[20] == 0) ? "STR" : "LDR";
     int offset_12 = this->raw_instruction.Range(0, 12);
-    this->output << operation;
     // Check if B flag (unsigned byte or word) is on
-    this->output << ((this->raw_instruction[22] == 1) ? "B " : " ");
-    this->output << (this->condition) << " ";
+    string b = ((this->raw_instruction[22] == 1) ? "B " : " ");
+    this->output << (operation + b + this->condition);
     this->output <<  this->regstruct.Rn << ", " << "[" << this->regstruct.Rd;
     this->output << ", #" << ((this->raw_instruction[23] == 0) ? "-" : "");
     this->output << offset_12 << "]" << std::endl;
@@ -131,15 +135,15 @@ void Instruction::BranchImmediate() {
     {
         offset_24 = (offset_24 << 2) + 8;
     }
-    this->output << "B" << ((this->raw_instruction[24] == 1) ? "L " : " " );
-    this->output << this->condition << " ";
+    string operation =  ((this->raw_instruction[24] == 1) ? "BL" : "B" );
+    this->output << (operation+this->condition);
     this->output <<  "#0x"  << std::hex << offset_24 << std::dec;
-    this->output << "   ; " << offset_24 << std::endl;
+    this->output << "   @ " << offset_24 << std::endl;
 }
 
 void Instruction::BranchExchange() {
-    this->output << ((this->raw_instruction[5] == 1) ? "BLX " : "BX ");
-    this->output << this->condition << " ";
+    string operation = ((this->raw_instruction[5] == 1) ? "BLX" : "BX");
+    this->output << (operation+this->condition);
     this->output <<  this->regstruct.Rm << std::endl;
 }
 
@@ -148,8 +152,9 @@ void Instruction::Unknown() {
 }
 
 void Instruction::SoftwareInterrupt() {
-    this->output << "SWI" << this->condition;
-    this->output << " #" << this->raw_instruction.Range(0, 24) << std::endl;
+    string operation = "SWI";
+    this->output << (operation + this->condition);
+    this->output << "#" << this->raw_instruction.Range(0, 24) << std::endl;
 
 }
 
@@ -158,15 +163,10 @@ void Instruction::DecodeInstruction() {
         printdebug("!BRANCHEXCHANGE\n");
         BranchExchange();
     }
-    // xxxx000xxxxxxxxxxxxxxxxxxxx0xxxx
-    else if (this->raw_instruction.Range(25,28) == 0 && this->raw_instruction[4]==0) {
-        printdebug("!DPIS\n");
-        DataProcImmediateShift();
-    }
-    // xxxx000xxxxxxxxxxxxxxxxxxxx1xxxx
-    else if (this->raw_instruction.Range(25, 28) == 0 && this->raw_instruction[4]==1) {
-        printdebug("!DPRS\n");
-        DataProcRegisterShift();
+    // xxxx000xxxxxxxxxxxxxxxxxxxx?xxxx
+    else if (this->raw_instruction.Range(25,28) == 0) {
+        printdebug("!DPS\n");
+        DataProcShift();
     }
     else if (this->raw_instruction.Range(25,28) == 0b001) {
         printdebug("!DPI\n");

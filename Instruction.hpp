@@ -19,6 +19,7 @@ class Instruction {
     Registers regstruct;
     Bits raw_instruction;
     std::string condition;
+    void PadOutput(int);
 
     public:
     ostringstream output;
@@ -29,8 +30,7 @@ class Instruction {
     std::string GetShiftType();
     int GetShiftAmount();
     int GetOpcodeNum();
-    void DataProcImmediateShift();
-    void DataProcRegisterShift();
+    void DataProcShift();
     void DecodeInstruction();
     void DataProcImmediate();
     void LoadStoreImmediateOffset();
