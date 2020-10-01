@@ -18,10 +18,10 @@ Instruction::Instruction(uint32_t raw) : raw_instruction(raw){
 }
 
 void Instruction::SetRegisters() {
-    this->regstruct.Rn = this->raw_instruction.Range(16, 20);
-    this->regstruct.Rd = this->raw_instruction.Range(12,16);
-    this->regstruct.Rm = this->raw_instruction.Range(0,4);
-    this->regstruct.Rs = this->raw_instruction.Range(8,12);
+    this->regstruct.Rn = registers[this->raw_instruction.Range(16, 20)];
+    this->regstruct.Rd = registers[this->raw_instruction.Range(12,16)];
+    this->regstruct.Rm = registers[this->raw_instruction.Range(0,4)];
+    this->regstruct.Rs = registers[this->raw_instruction.Range(8,12)];
 }
 
 // Check the condition bits
@@ -59,12 +59,12 @@ void Instruction::DataProcImmediateShift() {
     int opcode_num = this->GetOpcodeNum();
     string shiftype = GetShiftType();
     int shift = GetShiftAmount();
-    this->output << opcodes[opcode_num] << this->condition << " R" << this->regstruct.Rd << ", R";
+    this->output << opcodes[opcode_num] << this->condition << " " << this->regstruct.Rd << ", ";
     if (OnlyTwoOperands(opcode_num)) {
         output << this->regstruct.Rm;
     }
     else {
-        output << this->regstruct.Rn << ", R" << this->regstruct.Rm;
+        output << this->regstruct.Rn << ", " << this->regstruct.Rm;
     } 
     if (shift) {
         output << ", " << shiftype << " #" << shift;
@@ -75,14 +75,14 @@ void Instruction::DataProcImmediateShift() {
 void Instruction::DataProcRegisterShift() {
     int opcode_num = this->GetOpcodeNum();
     string shiftype = GetShiftType();
-    this->output << opcodes[opcode_num] << this->condition << " R" << this->regstruct.Rd << ", R";
+    this->output << opcodes[opcode_num] << this->condition << " " << this->regstruct.Rd << ", ";
     if (OnlyTwoOperands(opcode_num)) {
         output << this->regstruct.Rm;
     }
     else {
-        output << this->regstruct.Rn << ", R" << this->regstruct.Rm;
+        output << this->regstruct.Rn << ", " << this->regstruct.Rm;
     }
-    output << ", " << shiftype << " R" << this->regstruct.Rs << std::endl;
+    output << ", " << shiftype << " " << this->regstruct.Rs << std::endl;
     return;
 }
 
@@ -94,12 +94,12 @@ void Instruction::DataProcImmediate() {
     // Rotate right in 32 bit space
     // value = immed_8 rotated right by 2*rotate
     int value = (immed_8 >> rotate_imm*2) | (immed_8 << (32-rotate_imm*2));
-    this->output << opcodes[opcode_num] << this->condition << " R";
+    this->output << opcodes[opcode_num] << this->condition << " ";
     if (OnlyTwoOperands(opcode_num)) {
         output << this->regstruct.Rd;
     }
     else {
-        output << this->regstruct.Rn << ", R" << this->regstruct.Rd;
+        output << this->regstruct.Rn << ", " << this->regstruct.Rd;
     }
     output << ", #" << value << std::endl;
 }
@@ -112,7 +112,7 @@ void Instruction::LoadStoreImmediateOffset() {
     // Check if B flag (unsigned byte or word) is on
     this->output << ((this->raw_instruction[22] == 1) ? "B " : " ");
     this->output << (this->condition) << " ";
-    this->output << "R" << this->regstruct.Rn << ", " << "[R" << this->regstruct.Rd;
+    this->output <<  this->regstruct.Rn << ", " << "[" << this->regstruct.Rd;
     this->output << ", #" << ((this->raw_instruction[23] == 0) ? "-" : "");
     this->output << offset_12 << "]" << std::endl;
 }
@@ -132,32 +132,61 @@ void Instruction::BranchImmediate() {
         offset_24 = (offset_24 << 2) + 8;
     }
     this->output << "B" << ((this->raw_instruction[24] == 1) ? "L " : " " );
-    this->output <<  "#"  << std::hex << offset_24 << std::dec;
+    this->output << this->condition << " ";
+    this->output <<  "#0x"  << std::hex << offset_24 << std::dec;
     this->output << "   ; " << offset_24 << std::endl;
 }
 
+void Instruction::BranchExchange() {
+    this->output << ((this->raw_instruction[5] == 1) ? "BLX " : "BX ");
+    this->output << this->condition << " ";
+    this->output <<  this->regstruct.Rm << std::endl;
+}
+
+void Instruction::Unknown() {
+    this->output << "(unknown)" << std::endl;
+}
+
+void Instruction::SoftwareInterrupt() {
+    this->output << "SWI" << this->condition;
+    this->output << " #" << this->raw_instruction.Range(0, 24) << std::endl;
+
+}
 
 void Instruction::DecodeInstruction() {
+    if (this->raw_instruction.Range(20, 28) == 0b00010010) {
+        printdebug("!BRANCHEXCHANGE\n");
+        BranchExchange();
+    }
     // xxxx000xxxxxxxxxxxxxxxxxxxx0xxxx
-    if (this->raw_instruction.Range(25,28) == 0 && this->raw_instruction[4]==0) {
+    else if (this->raw_instruction.Range(25,28) == 0 && this->raw_instruction[4]==0) {
         printdebug("!DPIS\n");
         DataProcImmediateShift();
     }
     // xxxx000xxxxxxxxxxxxxxxxxxxx1xxxx
-    if (this->raw_instruction.Range(25, 28) == 0 && this->raw_instruction[4]==1) {
+    else if (this->raw_instruction.Range(25, 28) == 0 && this->raw_instruction[4]==1) {
         printdebug("!DPRS\n");
         DataProcRegisterShift();
     }
-    if (this->raw_instruction.Range(25,28) == 0b001) {
+    else if (this->raw_instruction.Range(25,28) == 0b001) {
         printdebug("!DPI\n");
         DataProcImmediate();
     }
-    if (this->raw_instruction.Range(25,28) == 0b010) {
+    else if (this->raw_instruction.Range(25,28) == 0b010) {
         printdebug("!LSIO\n");
         LoadStoreImmediateOffset();
     }
-    if (this->raw_instruction.Range(25,28) == 0b101) {
+    else if (this->raw_instruction.Range(25,28) == 0b101) {
         printdebug("!BRANCH\n");
         BranchImmediate();
     }
+    else if (this->raw_instruction.Range(24, 28) == 0b1111) {
+        printdebug("!SWI\n");
+        SoftwareInterrupt();
+    }
+    else {
+        printdebug("!UNKNOWN\n");
+        Unknown();
+    }
+
 }
